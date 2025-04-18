@@ -1,0 +1,66 @@
+services:
+  nginx:
+    image: 'nginx:alpine'
+    ports:
+      - '80:80'
+    volumes:
+      - './.nginx/nginx.conf:/etc/nginx/nginx.conf'
+    depends_on:
+      - 'server'
+      - 'web'
+    networks:
+      - 'inner'
+
+  server:
+    image: 'studenda-server'
+    build:
+      context: './studenda-server'
+      dockerfile: 'Studenda.Server/Dockerfile'
+    depends_on:
+      database:
+        condition: 'service_healthy'
+    environment:
+      ConnectionStrings__Default: 'Server=database;Port=3306;Database=studenda_default;Uid=arkham;Pwd=secret'
+    networks:
+      - 'inner'
+
+  database:
+    container_name: 'database'
+    image: 'mariadb:latest'
+    environment:
+      MARIADB_DATABASE: 'studenda_default'
+      MARIADB_USER: 'arkham'
+      MARIADB_PASSWORD: 'secret'
+      MARIADB_ROOT_PASSWORD: 'verysecret'
+    healthcheck:
+      test: 'mariadb --password=$$MARIADB_ROOT_PASSWORD --execute "SHOW DATABASES;"'
+      start_period: '5s'
+      interval: '2s'
+      timeout: '10s'
+      retries: 10
+    ports:
+      - '3306:3306'
+    volumes:
+      - 'data:/var/lib/mysql'
+    networks:
+      - 'inner'
+
+  redis:
+    image: 'redis:alpine'
+    networks:
+      - 'inner'
+
+  web:
+    image: 'studenta-web'
+    build:
+      context: './studenda-web'
+    depends_on:
+      - 'server'
+    networks:
+      - 'inner'
+
+volumes:
+  data:
+
+networks:
+  inner:

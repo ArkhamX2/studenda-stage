@@ -1,0 +1,6 @@
+[submodule "studenda-server"]
+	path = studenda-server
+	url = git@github.com:ArkhamX2/studenda-server.git
+[submodule "studenda-web"]
+	path = studenda-web
+	url = git@github.com:ArkhamX2/studenda-web.git
